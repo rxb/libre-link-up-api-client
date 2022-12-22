@@ -147,6 +147,25 @@ export const LibreLinkUpClient = ({
     return connections[0].patientId;
   };
 
+  const getLogbook = loginWrapper(async () => {
+    if (!connectionId) {
+      const connections = await getConnections();
+      connectionId = getConnection(connections.data);
+    }
+
+    const response = await instance.get<GraphData>(
+      `${urlMap.connections}/${connectionId}/logbook`
+    );
+
+    const rawLogbookResponse = response.data.data as any;
+    const toDate = (dateString: string): Date => new Date(dateString);
+
+    return rawLogbookResponse.map((logItem: any) => ({
+      ...logItem,
+      date: toDate(`${logItem.FactoryTimestamp} UTC`),
+    }));
+  });
+
   const readRaw = loginWrapper<ReadRawResponse>(async () => {
     if (!connectionId) {
       const connections = await getConnections();
@@ -236,5 +255,6 @@ export const LibreLinkUpClient = ({
     read,
     readAveraged,
     login,
+    getLogbook,
   };
 };
